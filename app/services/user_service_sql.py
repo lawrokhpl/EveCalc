@@ -15,22 +15,27 @@ class SQLUserService:
         engine = get_engine()
         Base.metadata.create_all(bind=engine)
 
+    @staticmethod
+    def _norm_username(username: str) -> str:
+        return (username or "").strip().lower()
+
     def register_user(self, username: str, password: str):
         if not username or not password:
             return False, "Username and password cannot be empty."
-
+        uname = self._norm_username(username)
         password_hash = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
 
         with session_scope() as s:
-            exists = s.execute(select(User).where(User.email == username)).scalar_one_or_none()
+            exists = s.execute(select(User).where(User.email == uname)).scalar_one_or_none()
             if exists:
                 return False, "Username already exists."
-            s.add(User(email=username, password_hash=password_hash))
+            s.add(User(email=uname, password_hash=password_hash))
         return True, "User registered successfully."
 
     def verify_user(self, username: str, password: str) -> bool:
+        uname = self._norm_username(username)
         with session_scope() as s:
-            user = s.execute(select(User).where(User.email == username)).scalar_one_or_none()
+            user = s.execute(select(User).where(User.email == uname)).scalar_one_or_none()
             if not user:
                 return False
             if not user.password_hash:
@@ -41,8 +46,9 @@ class SQLUserService:
                 return False
 
     def load_user_preferences(self, username: str) -> Dict:
+        uname = self._norm_username(username)
         with session_scope() as s:
-            user = s.execute(select(User).where(User.email == username)).scalar_one_or_none()
+            user = s.execute(select(User).where(User.email == uname)).scalar_one_or_none()
             if not user:
                 return {}
             prefs = s.execute(select(UserPreference).where(UserPreference.user_id == user.id)).scalars().all()
@@ -57,8 +63,9 @@ class SQLUserService:
             return converted
 
     def save_user_preferences(self, username: str, preferences: Dict) -> None:
+        uname = self._norm_username(username)
         with session_scope() as s:
-            user = s.execute(select(User).where(User.email == username)).scalar_one_or_none()
+            user = s.execute(select(User).where(User.email == uname)).scalar_one_or_none()
             if not user:
                 return
             # Upsert key/value as strings (JSON dump)
@@ -73,8 +80,9 @@ class SQLUserService:
                     s.add(UserPreference(user_id=user.id, key=k, value=value_str))
 
     def get_user_id(self, username: str) -> int:
+        uname = self._norm_username(username)
         with session_scope() as s:
-            user = s.execute(select(User).where(User.email == username)).scalar_one_or_none()
+            user = s.execute(select(User).where(User.email == uname)).scalar_one_or_none()
             return user.id if user else 0
 
 

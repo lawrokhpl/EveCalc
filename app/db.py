@@ -41,7 +41,15 @@ def get_engine():
     global _engine, _SessionLocal
     if _engine is None:
         url = _build_sqlalchemy_url()
-        _engine = create_engine(url, pool_pre_ping=True, future=True)
+        # Cloud SQL/managed envs can drop idle connections; recycle and pre-ping
+        _engine = create_engine(
+            url,
+            pool_pre_ping=True,
+            pool_recycle=300,
+            pool_size=5,
+            max_overflow=2,
+            future=True,
+        )
         _SessionLocal = sessionmaker(bind=_engine, autoflush=False, autocommit=False, future=True)
     return _engine
 
