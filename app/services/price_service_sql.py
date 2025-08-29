@@ -7,6 +7,7 @@ from sqlalchemy import select
 from app.db import session_scope, get_engine
 from app.models.sql_models import Base, Price, PriceHistory
 import pandas as pd
+import os
 
 
 class SQLPriceService:
@@ -26,7 +27,27 @@ class SQLPriceService:
     def load_prices(self) -> None:
         with session_scope() as s:
             rows = s.execute(select(Price)).scalars().all()
-            self._cache = {r.resource: float(r.price) for r in rows}
+            if not rows:
+                # Attempt to seed from default CSV if DB is empty
+                default_candidates = [
+                    os.path.join('data', 'user_data', 'lawrokh', 'price_imports', 'ceny.csv'),
+                    os.path.join('data', 'price_imports', 'ceny.csv'),
+                    os.path.join('data', 'ceny.csv'),
+                ]
+                for path in default_candidates:
+                    if os.path.exists(path):
+                        try:
+                            df = pd.read_csv(path)
+                            if 'resource' in df.columns and 'price' in df.columns:
+                                seed = pd.Series(df['price'].fillna(0.0).values, index=df['resource']).to_dict()
+                                self.update_multiple_prices(seed)
+                                self.save_prices()
+                                break
+                        except Exception:
+                            pass
+                # reload after potential seed
+                rows = s.execute(select(Price)).scalars().all()
+            self._cache = {self._normalize_resource(r.resource): float(r.price) for r in rows}
 
     def save_prices(self) -> None:
         with session_scope() as s:

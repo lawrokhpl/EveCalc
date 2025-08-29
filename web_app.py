@@ -17,6 +17,21 @@ st.set_page_config(
     layout="wide"
 )
 
+# Google Analytics (gtag.js)
+st.markdown(
+    """
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-NJMX7FMVNW"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);} 
+      gtag('js', new Date());
+      gtag('config', 'G-NJMX7FMVNW');
+    </script>
+    """,
+    unsafe_allow_html=True,
+)
+
 # --- User Authentication ---
 if settings.DATA_BACKEND == "sql":
     user_service = SQLUserService()
@@ -651,7 +666,7 @@ def main_app():
             # Format for display
             display_income_df["Net Daily Income"] = display_income_df["Net Daily Income"].map('{:,.2f}'.format)
             
-            st.dataframe(display_income_df.sort_values(by="Net Daily Income", key=lambda x: pd.to_numeric(x.str.replace(',','')), ascending=False), use_container_width=True)
+            st.dataframe(display_income_df.sort_values(by="Net Daily Income", key=lambda x: pd.to_numeric(x.str.replace(',','')), ascending=False), use_container_width=True, hide_index=True)
             
             # Totals
             total_net_daily = summary_df['Net Daily Income'].sum()
@@ -663,19 +678,6 @@ def main_app():
             i_col2.metric("Total Net Weekly Income", f"{total_net_weekly:,.2f} ISK")
             i_col3.metric("Total Net Monthly Income", f"{total_net_monthly:,.2f} ISK")
 
-            # Always show systems with active mining units
-            st.markdown("#### Active Mining Systems")
-            systems_summary = summary_df.groupby(['System'], as_index=False).agg({
-                'Mining Units': 'sum',
-                'Net Daily Income': 'sum'
-            })
-            systems_summary = systems_summary.sort_values(by='Net Daily Income', ascending=False)
-            systems_summary['Net Daily Income'] = systems_summary['Net Daily Income'].map('{:,.2f}'.format)
-            st.dataframe(
-                systems_summary,
-                use_container_width=True,
-                hide_index=True
-            )
 
             st.divider()
 
@@ -910,12 +912,18 @@ def main_app():
                     resource_df = filtered_history[filtered_history['resource'] == resource].sort_values('date')
                     if len(resource_df) > 0:
                         last_row = resource_df.iloc[-1]
-                        last_net_buy = last_row['buy'] * tax_multiplier
+                        last_buy = last_row.get('buy') if 'buy' in resource_df.columns else None
+                        last_avg = last_row.get('average') if 'average' in resource_df.columns else None
+                        base_val = last_avg if pd.notna(last_avg) else (last_buy if pd.notna(last_buy) else 0.0)
+                        last_net_buy = float(base_val) * tax_multiplier
                         change = 0
                         
                         if len(resource_df) > 1:
                             prev_row = resource_df.iloc[-2]
-                            prev_net_buy = prev_row['buy'] * tax_multiplier
+                            prev_buy = prev_row.get('buy') if 'buy' in resource_df.columns else None
+                            prev_avg = prev_row.get('average') if 'average' in resource_df.columns else None
+                            prev_base = prev_avg if pd.notna(prev_avg) else (prev_buy if pd.notna(prev_buy) else 0.0)
+                            prev_net_buy = float(prev_base) * tax_multiplier
                             change = last_net_buy - prev_net_buy
                         
                         summary_data.append({
