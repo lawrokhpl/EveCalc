@@ -48,6 +48,15 @@ gcloud run deploy $SERVICE_NAME `
   --cpu 2 `
   --port 8080 `
   --max-instances 10
+
+### Zmienne środowiskowe (Cloud Run / App Engine)
+- DATA_BACKEND=sql
+- DB_USER=your_user
+- DB_PASS=your_password
+- DB_NAME=EveCalcDB
+- CLOUD_SQL_CONNECTION_NAME=your-project:region:instance
+
+> W przypadku App Engine Standard dodaj te wartości w sekcji `env_variables` w `app.yaml`.
 ```
 
 ### Krok 4: Otrzymasz URL aplikacji

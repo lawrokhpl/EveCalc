@@ -27,7 +27,11 @@ class DataService:
         self._process_data(mining_units)
         
     def _load_mining_units(self) -> Dict[str, int]:
-        """Load mining units from JSON file"""
+        """Load mining units. Uses SQL backend if enabled, otherwise JSON file."""
+        from app.config import settings
+        if settings.DATA_BACKEND == "sql":
+            from app.services.mining_units_service_sql import SQLMiningUnitsService
+            return SQLMiningUnitsService().load_units_map()
         if os.path.exists(self.mining_units_path):
             try:
                 with open(self.mining_units_path, 'r') as f:
@@ -37,14 +41,19 @@ class DataService:
         return {}
 
     def save_mining_units(self) -> None:
-        """Save mining units to JSON file"""
+        """Save mining units. Uses SQL backend if enabled, otherwise JSON file."""
         mining_units = {}
         for planet in self.planets.values():
             for resource in planet.resources:
                 if resource.mining_units > 0:
                     key = f"{resource.planet_id}_{resource.resource}"
                     mining_units[key] = resource.mining_units
-        
+
+        from app.config import settings
+        if settings.DATA_BACKEND == "sql":
+            from app.services.mining_units_service_sql import SQLMiningUnitsService
+            SQLMiningUnitsService().save_units_map(mining_units)
+            return
         os.makedirs(os.path.dirname(self.mining_units_path), exist_ok=True)
         with open(self.mining_units_path, 'w') as f:
             json.dump(mining_units, f, indent=4)

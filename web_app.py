@@ -5,6 +5,9 @@ from app.services.data_service import DataService
 from app.services.price_service import PriceService
 from app.services.analytics_service import AnalyticsService
 from app.services.user_service import UserService
+from app.services.user_service_sql import SQLUserService
+from app.services.price_service_sql import SQLPriceService
+from app.config import settings
 from app.path_utils import resource_path
 
 # --- Page Configuration ---
@@ -15,28 +18,214 @@ st.set_page_config(
 )
 
 # --- User Authentication ---
-user_service = UserService(user_file_path=resource_path("app/secure/users.json"))
+if settings.DATA_BACKEND == "sql":
+    user_service = SQLUserService()
+else:
+    user_service = UserService(user_file_path=resource_path("app/secure/users.json"))
 
 if 'authentication_status' not in st.session_state:
     st.session_state.authentication_status = None
     st.session_state.username = None
 
 def login_form():
-    st.title("Login")
-    with st.form("login_form"):
-        username = st.text_input("Username")
-        password = st.text_input("Password", type="password")
-        submitted = st.form_submit_button("Login")
-        if submitted:
-            if user_service.verify_user(username, password):
-                st.session_state.authentication_status = True
-                st.session_state.username = username
-                st.rerun()
-            else:
-                st.error("Invalid username or password")
+    # Hero Section for Login
+    st.markdown("""
+    <div style="
+        background: linear-gradient(50deg, #D4D9DB 0%, #D4D9DB 100%);
+        padding: 2rem;
+        border-radius: 5px;
+        margin-bottom: 1rem;
+        text-align: center;
+        color: black;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+    ">
+        <h1 style="font-size: 1.5rem; margin-bottom: 1rem; text-shadow: 1px 1px 2px rgba(0,0,0,0.3);">
+            🪐 EVE Echoes Planetary Mining Optimizer
+        </h1>
+        <p style="font-size: 1.1rem; opacity: 0.9; margin-bottom: 0;">
+            Log in to start optimizing planetary mining operations
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Two column layout: Features on left, Login on right
+    col1, col2 = st.columns([2, 1])
+    
+    with col1:
+        # Features from README.md lines 6-12
+        st.markdown("### 🚀 Features")
+        
+        # Feature Card 1
+        st.markdown("""
+        <div style="
+            background: #8E8E93;
+            padding: 0.6rem;
+            border-radius: 9px;
+            margin-bottom: 0.4rem;
+            color: white;
+            box-shadow: 0 2.4px 12px rgba(0,0,0,0.1);
+            border-left: 3px solid #ffffff;
+        ">
+            <h3 style="margin: 0 0 0.4rem 0; font-size: 1.1rem;">🪐 Planetary Resource Analysis</h3>
+            <p style="margin: 0; opacity: 0.9; font-size: 0.95rem;">
+                Analyze resources across all systems, constellations, and regions
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        # Feature Card 2
+        st.markdown("""
+        <div style="
+            background: #8E8E93;
+            padding: 0.6rem;
+            border-radius: 9px;
+            margin-bottom: 0.4rem;
+            color: white;
+            box-shadow: 0 2.4px 12px rgba(0,0,0,0.1);
+            border-left: 3px solid #ffffff;
+        ">
+            <h3 style="margin: 0 0 0.4rem 0; font-size: 1.1rem;">💰 Price Management</h3>
+            <p style="margin: 0; opacity: 0.9; font-size: 0.95rem;">
+                Import and manage custom price lists
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        # Feature Card 3
+        st.markdown("""
+        <div style="
+            background: #8E8E93;
+            padding: 0.6rem;
+            border-radius: 9px;
+            margin-bottom: 0.4rem;
+            color: white;
+            box-shadow: 0 2.4px 12px rgba(0,0,0,0.1);
+            border-left: 3px solid #ffffff;
+        ">
+            <h3 style="margin: 0 0 0.4rem 0; font-size: 1.1rem;">📊 Mining Units Optimization</h3>
+            <p style="margin: 0; opacity: 0.9; font-size: 0.95rem;">
+                Calculate optimal mining unit placement
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        # Feature Card 4
+        st.markdown("""
+        <div style="
+            background: #8E8E93;
+            padding: 0.6rem;
+            border-radius: 9px;
+            margin-bottom: 0.4rem;
+            color: white;
+            box-shadow: 0 2.4px 12px rgba(0,0,0,0.1);
+            border-left: 3px solid #ffffff;
+        ">
+            <h3 style="margin: 0 0 0.4rem 0; font-size: 1.1rem;">🚀 Logistics Planning</h3>
+            <p style="margin: 0; opacity: 0.9; font-size: 0.95rem;">
+                Plan cargo runs based on ship capacity
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        # Feature Card 5
+        st.markdown("""
+        <div style="
+            background: #8E8E93;
+            padding: 0.6rem;
+            border-radius: 9px;
+            margin-bottom: 0.4rem;
+            color: white;
+            box-shadow: 0 2.4px 12px rgba(0,0,0,0.1);
+            border-left: 3px solid #ffffff;
+        ">
+            <h3 style="margin: 0 0 0.4rem 0; font-size: 1.1rem;">📈 Analytics & Reports</h3>
+            <p style="margin: 0; opacity: 0.9; font-size: 0.95rem;">
+                Detailed profitability analysis and reports
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        # Feature Card 6
+        st.markdown("""
+        <div style="
+            background: #8E8E93;
+            padding: 0.6rem;
+            border-radius: 9px;
+            margin-bottom: 0.4rem;
+            color: white;
+            box-shadow: 0 2.4px 12px rgba(0,0,0,0.1);
+            border-left: 3px solid #ffffff;
+        ">
+            <h3 style="margin: 0 0 0.4rem 0; font-size: 1.1rem;">👥 Multi-user Support</h3>
+            <p style="margin: 0; opacity: 0.9; font-size: 0.95rem;">
+                Secure user authentication and personal data storage
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col2:
+        # Login Form with styling
+        st.markdown("### 🔐 Login")
+        
+        with st.form("login_form"):
+            username = st.text_input("Username", placeholder="Enter username")
+            password = st.text_input("Password", type="password", placeholder="Enter password")
+            submitted = st.form_submit_button("Login", type="primary", use_container_width=True)
+            if submitted:
+                if user_service.verify_user(username, password):
+                    st.session_state.authentication_status = True
+                    st.session_state.username = username
+                    st.rerun()
+                else:
+                    st.error("❌ Invalid username or password")
+        
+        # Support section in the right column
+        st.markdown("### 💰 Support")
+        st.markdown("""
+        <div style="
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+            padding: 0.6rem;
+            border-radius: 6px;
+            text-align: center;
+            box-shadow: 0 1.6px 9px rgba(0,0,0,0.1);
+            border: 1.2px solid #ffd700;
+        ">
+            <h4 style="color: #d63384; margin-bottom: 0.4rem; font-size: 0.9rem;">💎 Support the Developer</h4>
+            <p style="margin-bottom: 0.4rem; color: #333; font-size: 0.7rem;">
+                If you find this tool helpful, please consider supporting!
+            </p>
+            <div style="
+                background: rgba(255,255,255,0.3);
+                padding: 0.32rem;
+                border-radius: 4.8px;
+                margin: 0.4rem 0;
+            ">
+                <h5 style="margin: 0; color: #d63384; font-size: 0.7rem;">ISK Donations:</h5>
+                <h4 style="margin: 0.12rem 0; color: #333; font-size: 0.8rem;">lawrokhPL</h4>
+                <p style="margin: 0; color: #666; font-size: 0.6rem;">in EVE Echoes</p>
+            </div>
+            <p style="margin: 0; font-style: italic; color: #666; font-size: 0.6rem;">
+                Thank you! o7
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
 
 def registration_form():
-    st.title("Register")
+    # Black header bar with white centered text
+    st.markdown("""
+    <div style="
+        background: #000000;
+        padding: 1rem;
+        border-radius: 8px;
+        margin-bottom: 1.5rem;
+        text-align: center;
+        color: white;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    ">
+        <h2 style="margin: 0; font-size: 1.5rem; color: white;">📝 Registration</h2>
+        <p style="margin: 0.5rem 0 0 0; color: #cccccc; font-size: 1rem;">Create your account to get started</p>
+    </div>
+    """, unsafe_allow_html=True)
     
     # Load Privacy Policy
     try:
@@ -50,10 +239,10 @@ def registration_form():
     
     with col1:
         with st.form("registration_form"):
-            username = st.text_input("Username")
-            password = st.text_input("Password", type="password")
+            username = st.text_input("Username", placeholder="Enter username")
+            password = st.text_input("Password", type="password", placeholder="Enter password")
             
-            st.markdown("### Privacy Policy")
+            st.markdown("### 📋 Privacy Policy")
             st.info("By registering, you agree to our Privacy Policy. Your data is stored securely and never shared with third parties.")
             
             privacy_policy_accepted = st.checkbox("I agree to the Privacy Policy")
@@ -61,28 +250,47 @@ def registration_form():
             submitted = st.form_submit_button("Register", type="primary", use_container_width=True)
             if submitted:
                 if not username or not password:
-                    st.error("Please enter both username and password.")
+                    st.error("❌ Please enter both username and password.")
                 elif not privacy_policy_accepted:
-                    st.error("You must accept the Privacy Policy to register.")
+                    st.error("❌ You must accept the Privacy Policy to register.")
                 else:
                     success, message = user_service.register_user(username, password)
                     if success:
-                        st.success(message)
+                        st.success("✅ " + message)
                         st.info("You can now login with your credentials.")
                     else:
-                        st.error(message)
+                        st.error("❌ " + message)
     
     with col2:
         st.markdown("### 💰 Support")
-        st.info("""
-        **ISK Donations:**
-        
-        **lawrokhPL**
-        
-        in EVE Echoes
-        
-        Thank you! o7
-        """)
+        st.markdown("""
+        <div style="
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+            padding: 0.6rem;
+            border-radius: 6px;
+            text-align: center;
+            box-shadow: 0 1.6px 9px rgba(0,0,0,0.1);
+            border: 1.2px solid #ffd700;
+        ">
+            <h4 style="color: #d63384; margin-bottom: 0.4rem; font-size: 0.9rem;">💎 Support the Developer</h4>
+            <p style="margin-bottom: 0.4rem; color: #333; font-size: 0.7rem;">
+                If you find this tool helpful, please consider supporting!
+            </p>
+            <div style="
+                background: rgba(255,255,255,0.3);
+                padding: 0.32rem;
+                border-radius: 4.8px;
+                margin: 0.4rem 0;
+            ">
+                <h5 style="margin: 0; color: #d63384; font-size: 0.7rem;">ISK Donations:</h5>
+                <h4 style="margin: 0.12rem 0; color: #333; font-size: 0.8rem;">lawrokhPL</h4>
+                <p style="margin: 0; color: #666; font-size: 0.6rem;">in EVE Echoes</p>
+            </div>
+            <p style="margin: 0; font-style: italic; color: #666; font-size: 0.6rem;">
+                Thank you! o7
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
 
 # --- Main App Logic ---
 def main_app():
@@ -95,6 +303,11 @@ def main_app():
     def save_prefs():
         """Callback to save preferences."""
         user_service.save_user_preferences(username, st.session_state.user_prefs)
+
+    def set_pref(pref_key, value):
+        """Utility to persist a single preference immediately."""
+        st.session_state.user_prefs[pref_key] = value
+        save_prefs()
 
     # --- Data Loading ---
     @st.cache_resource(show_spinner=f"Loading data for {username}...")
@@ -113,7 +326,10 @@ def main_app():
         data_service = DataService(data_path, mining_units_path)
         data_service.load_data()
         
-        price_service = PriceService(prices_path)
+        if settings.DATA_BACKEND == "sql":
+            price_service = SQLPriceService()
+        else:
+            price_service = PriceService(prices_path)
         analytics_service = AnalyticsService(data_service, price_service)
         
         return data_service, price_service, analytics_service
@@ -130,52 +346,108 @@ def main_app():
         
         st.header("Filters")
         
-        # --- Price File Selection in Sidebar ---
-        imports_dir = os.path.join("data", "user_data", username, "price_imports")
-        saved_imports = [f for f in os.listdir(imports_dir) if f.endswith(".csv")]
-        
-        price_options = ["Default"] + saved_imports
-        selected_price_file = st.selectbox(
-            "Select Price Set", 
-            options=price_options,
-            help="Temporarily load a different set of prices for analysis. To set a new default, use the Price Management tab."
-        )
-
-        if selected_price_file != "Default":
+        # --- Price Selection in Sidebar ---
+        if settings.DATA_BACKEND == "sql":
+            # Allow choosing a historical date (if available)
             try:
-                file_path = os.path.join(imports_dir, selected_price_file)
-                imported_df = pd.read_csv(file_path)
-                if "resource" in imported_df.columns and "price" in imported_df.columns:
-                    price_dict = pd.Series(imported_df.price.values, index=imported_df.resource).to_dict()
+                from app.services.user_service_sql import SQLUserService
+                uid = SQLUserService().get_user_id(username)
+            except Exception:
+                uid = None
+            try:
+                history_dates = price_service.get_distinct_history_dates(uid)
+            except Exception:
+                history_dates = []
+            selected_date = st.selectbox(
+                "Select historical prices by date (optional)",
+                options=["Current"] + history_dates,
+                format_func=lambda d: d if isinstance(d, str) else d.strftime("%Y-%m-%d %H:%M")
+            )
+            if selected_date != "Current" and selected_date is not None:
+                try:
+                    price_dict = price_service.load_prices_from_history_date(selected_date, uid)
                     price_service.update_multiple_prices(price_dict)
-                else:
-                    st.warning(f"Invalid format in {selected_price_file}. Using default prices.")
-                    price_service.load_prices() # Revert to default
-            except Exception as e:
-                st.error(f"Error loading {selected_price_file}: {e}")
-                price_service.load_prices() # Revert to default
+                except Exception as e:
+                    st.warning(f"Could not load historical prices: {e}")
+                    price_service.load_prices()
+            else:
+                price_service.load_prices()
         else:
-            price_service.load_prices() # Ensure default is loaded
+            # Legacy local CSV selection
+            imports_dir = os.path.join("data", "user_data", username, "price_imports")
+            saved_imports = [f for f in os.listdir(imports_dir) if f.endswith(".csv")] if os.path.isdir(imports_dir) else []
+            price_options = ["Default"] + saved_imports
+            selected_price_file = st.selectbox(
+                "Select Price Set",
+                options=price_options,
+                help="Temporarily load a different set of prices for analysis."
+            )
+            if selected_price_file != "Default":
+                try:
+                    file_path = os.path.join(imports_dir, selected_price_file)
+                    imported_df = pd.read_csv(file_path)
+                    if "resource" in imported_df.columns and "price" in imported_df.columns:
+                        price_dict = pd.Series(imported_df.price.values, index=imported_df.resource).to_dict()
+                        price_service.update_multiple_prices(price_dict)
+                    else:
+                        st.warning(f"Invalid format in {selected_price_file}. Using default prices.")
+                        price_service.load_prices()
+                except Exception as e:
+                    st.error(f"Error loading {selected_price_file}: {e}")
+                    price_service.load_prices()
+            else:
+                price_service.load_prices()
 
-        search_query = st.text_input("Search System, Constellation, or Region")
+        # --- Persisted Filters ---
+        # Search
+        search_query = st.text_input(
+            "Search System, Constellation, or Region",
+            value=st.session_state.user_prefs.get('search_query', ''),
+            key='search_query',
+            on_change=lambda: set_pref('search_query', st.session_state.get('search_query', ''))
+        )
         
         all_resources_list = data_service.get_all_resources()
-        selected_resources = st.multiselect("Resource", all_resources_list, key="resource_filter")
+        selected_resources = st.multiselect(
+            "Resource",
+            all_resources_list,
+            default=st.session_state.user_prefs.get('resource_filter', []),
+            key="resource_filter",
+            on_change=lambda: set_pref('resource_filter', st.session_state.get('resource_filter', []))
+        )
 
         regions = data_service.get_regions()
-        selected_regions = st.multiselect("Region", regions, key="region_filter")
+        selected_regions = st.multiselect(
+            "Region",
+            regions,
+            default=st.session_state.user_prefs.get('region_filter', []),
+            key="region_filter",
+            on_change=lambda: set_pref('region_filter', st.session_state.get('region_filter', []))
+        )
         
         if not selected_regions:
             constellations_list = data_service.get_constellations()
         else:
             constellations_list = data_service.get_constellations(selected_regions)
-        selected_constellations = st.multiselect("Constellation", constellations_list, key="constellation_filter")
+        selected_constellations = st.multiselect(
+            "Constellation",
+            constellations_list,
+            default=st.session_state.user_prefs.get('constellation_filter', []),
+            key="constellation_filter",
+            on_change=lambda: set_pref('constellation_filter', st.session_state.get('constellation_filter', []))
+        )
 
         if not selected_constellations:
             systems_list = data_service.get_systems()
         else:
             systems_list = data_service.get_systems(selected_constellations)
-        selected_systems = st.multiselect("System", systems_list, key="system_filter")
+        selected_systems = st.multiselect(
+            "System",
+            systems_list,
+            default=st.session_state.user_prefs.get('system_filter', []),
+            key="system_filter",
+            on_change=lambda: set_pref('system_filter', st.session_state.get('system_filter', []))
+        )
 
         st.divider()
         st.header("Logistics Input")
@@ -230,26 +502,7 @@ def main_app():
     master_df = st.session_state[master_df_key]
 
     # --- Main Page ---
-    st.title("Planetary Resource Analysis")
-    
-    # --- Donation Section ---
-    with st.container():
-        col1, col2, col3 = st.columns([1, 2, 1])
-        with col2:
-            st.info("""
-            💰 **Support the Developer**
-            
-            If you find this tool helpful, please consider supporting the development 
-            by sending ISK donations to:
-            
-            **lawrokhPL** 
-            
-            in EVE Echoes. Your support helps maintain and improve this calculator!
-            
-            Thank you for using the EVE Echoes Planetary Mining Optimizer! o7
-            """)
-    
-    st.divider()
+    st.title("🪐 EVE Echoes Planetary Mining Optimizer")
 
     # Filtering logic on the master dataframe
     filtered_df = master_df
@@ -410,6 +663,20 @@ def main_app():
             i_col2.metric("Total Net Weekly Income", f"{total_net_weekly:,.2f} ISK")
             i_col3.metric("Total Net Monthly Income", f"{total_net_monthly:,.2f} ISK")
 
+            # Always show systems with active mining units
+            st.markdown("#### Active Mining Systems")
+            systems_summary = summary_df.groupby(['System'], as_index=False).agg({
+                'Mining Units': 'sum',
+                'Net Daily Income': 'sum'
+            })
+            systems_summary = systems_summary.sort_values(by='Net Daily Income', ascending=False)
+            systems_summary['Net Daily Income'] = systems_summary['Net Daily Income'].map('{:,.2f}'.format)
+            st.dataframe(
+                systems_summary,
+                use_container_width=True,
+                hide_index=True
+            )
+
             st.divider()
 
             # --- FINAL PROFIT CALCULATION ---
@@ -498,56 +765,69 @@ def main_app():
         # --- Top Section: Import, Export, Load ---
         st.subheader("Manage Price Files")
 
-        # Export Button
+        # Export Button (unchanged)
         prices_df = pd.DataFrame(price_service.get_all_prices().items(), columns=["resource", "price"])
-        st.download_button(
-            label="Export Current Prices to CSV",
-            data=prices_df.to_csv(index=False).encode('utf-8'),
-            file_name="current_prices.csv",
-            mime="text/csv",
-        )
+        st.download_button(label="Export Current Prices to CSV", data=prices_df.to_csv(index=False).encode('utf-8'), file_name="current_prices.csv", mime="text/csv")
 
         # Import Uploader
-        uploaded_file = st.file_uploader("Upload a new price file to set as default", type="csv")
+        uploaded_file = st.file_uploader("Upload a new price CSV (import into DB; no file stored)", type="csv")
         if uploaded_file is not None:
             try:
                 new_prices_df = pd.read_csv(uploaded_file)
-                if "resource" in new_prices_df.columns and "price" in new_prices_df.columns:
-                    file_path = os.path.join("data", "user_data", username, "price_imports", uploaded_file.name)
-                    with open(file_path, "wb") as f:
-                        f.write(uploaded_file.getbuffer())
-                    
-                    price_dict = pd.Series(new_prices_df.price.values, index=new_prices_df.resource).to_dict()
+                if settings.DATA_BACKEND == "sql":
+                    try:
+                        from app.services.user_service_sql import SQLUserService
+                        uid = SQLUserService().get_user_id(username)
+                    except Exception:
+                        uid = None
+                    # Save history rows (resource,buy,sell,average[,date]) and update current cache from 'average' or 'buy'
+                    from datetime import datetime
+                    price_service.import_prices_dataframe(new_prices_df, user_id=uid, price_date=datetime.utcnow())
+                    # Update live cache from avg/buy if present, else 'price'
+                    price_dict = {}
+                    if 'average' in new_prices_df.columns:
+                        price_dict = pd.Series(new_prices_df['average'].fillna(0.0).values, index=new_prices_df['resource']).to_dict()
+                    elif 'buy' in new_prices_df.columns:
+                        price_dict = pd.Series(new_prices_df['buy'].fillna(0.0).values, index=new_prices_df['resource']).to_dict()
+                    elif 'price' in new_prices_df.columns:
+                        price_dict = pd.Series(new_prices_df['price'].fillna(0.0).values, index=new_prices_df['resource']).to_dict()
                     price_service.update_multiple_prices(price_dict)
                     price_service.save_prices()
-                    st.success(f"Successfully imported and set {uploaded_file.name} as default prices.")
+                    st.success("Imported CSV into DB and updated current prices.")
                     st.rerun()
                 else:
-                    st.error("Invalid CSV format. Please ensure it has 'resource' and 'price' columns.")
+                    if "resource" in new_prices_df.columns and "price" in new_prices_df.columns:
+                        price_dict = pd.Series(new_prices_df.price.values, index=new_prices_df.resource).to_dict()
+                        price_service.update_multiple_prices(price_dict)
+                        price_service.save_prices()
+                        st.success("Imported CSV and updated current prices.")
+                        st.rerun()
+                    else:
+                        st.error("Invalid CSV format. Expected 'resource' and 'price' columns.")
             except Exception as e:
                 st.error(f"An error occurred during import: {e}")
 
-        # Load from Saved
-        imports_dir = os.path.join("data", "user_data", username, "price_imports")
-        saved_imports = [f for f in os.listdir(imports_dir) if f.endswith(".csv")]
-        
-        if saved_imports:
-            selected_import = st.selectbox("Or load a saved file to set as default:", options=["-"] + saved_imports)
-            if selected_import != "-":
-                if st.button(f"Load: {selected_import}"):
-                    try:
-                        file_path = os.path.join(imports_dir, selected_import)
-                        imported_df = pd.read_csv(file_path)
-                        if "resource" in imported_df.columns and "price" in imported_df.columns:
-                            price_dict = pd.Series(imported_df.price.values, index=imported_df.resource).to_dict()
-                            price_service.update_multiple_prices(price_dict)
-                            price_service.save_prices()
-                            st.success(f"Successfully set {selected_import} as default prices.")
-                            st.rerun()
-                        else:
-                            st.error("Invalid CSV format in the selected file.")
-                    except Exception as e:
-                        st.error(f"An error occurred while loading the file: {e}")
+        # Load from Saved (file backend only)
+        if settings.DATA_BACKEND != "sql":
+            imports_dir = os.path.join("data", "user_data", username, "price_imports")
+            saved_imports = [f for f in os.listdir(imports_dir) if f.endswith(".csv")] if os.path.isdir(imports_dir) else []
+            if saved_imports:
+                selected_import = st.selectbox("Or load a saved file to set as default:", options=["-"] + saved_imports)
+                if selected_import != "-":
+                    if st.button(f"Load: {selected_import}"):
+                        try:
+                            file_path = os.path.join(imports_dir, selected_import)
+                            imported_df = pd.read_csv(file_path)
+                            if "resource" in imported_df.columns and "price" in imported_df.columns:
+                                price_dict = pd.Series(imported_df.price.values, index=imported_df.resource).to_dict()
+                                price_service.update_multiple_prices(price_dict)
+                                price_service.save_prices()
+                                st.success(f"Successfully set {selected_import} as default prices.")
+                                st.rerun()
+                            else:
+                                st.error("Invalid CSV format in the selected file.")
+                        except Exception as e:
+                            st.error(f"An error occurred while loading the file: {e}")
 
         st.divider()
 
@@ -670,9 +950,11 @@ def main_app():
                 st.line_chart(net_chart_data_avg)
 
 
+
+
 if st.session_state.authentication_status:
     main_app()
 else:
     login_form()
-    with st.expander("Don't have an account? Register here"):
+    with st.expander("🔐 Don't have an account? Register here"):
         registration_form() 

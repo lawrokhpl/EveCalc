@@ -154,3 +154,17 @@ W razie problemów:
 
 **Pamiętaj o donacji!** 💰  
 Jeśli aplikacja Ci pomaga, wesprzyj rozwój wysyłając ISK do **lawrokhPL** w EVE Echoes!
+
+---
+
+## 🧩 Uwaga dla wdrożeń na Google Cloud (Cloud Run / App Engine)
+
+Używaj zmiennych środowiskowych:
+
+- `DATA_BACKEND=sql`
+- `DB_USER=...`
+- `DB_PASS=...`
+- `DB_NAME=EveCalcDB`
+- `CLOUD_SQL_CONNECTION_NAME=your-project:region:instance`
+
+W trybie SQL aplikacja używa Cloud SQL (Postgres 16) przez socket `/cloudsql/…` lub TCP (jeśli podasz `DB_HOST`).

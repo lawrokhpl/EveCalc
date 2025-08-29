@@ -41,6 +41,43 @@ pip install -r requirements.txt
 streamlit run web_app.py
 ```
 
+### Environment configuration (.env)
+
+Create a `.env` file in the project root (or use the provided `.env.example`):
+
+```ini
+# Backend: file | sql
+DATA_BACKEND=sql
+
+# Local dev fallback (SQLite)
+SQLITE_PATH=data/local.db
+
+# Cloud SQL (Postgres)
+DB_USER=your_user
+DB_PASS=your_password
+DB_NAME=EveCalcDB
+# Choose one connection method:
+# 1) TCP for local/dev
+DB_HOST=127.0.0.1:5432
+# 2) Cloud SQL unix socket on GCP
+CLOUD_SQL_CONNECTION_NAME=your-project:region:instance
+
+# Auth backend: local | google
+AUTH_BACKEND=local
+# Google OAuth (only if AUTH_BACKEND=google)
+OAUTH_CLIENT_ID=
+OAUTH_CLIENT_SECRET=
+OAUTH_REDIRECT_URI=
+
+# Streamlit
+STREAMLIT_SERVER_HEADLESS=true
+STREAMLIT_SERVER_PORT=8080
+```
+
+When `DATA_BACKEND=sql`:
+- The app stores users, preferences, prices, price history and mining units in Postgres (Cloud SQL on GCP).
+- For local development without Postgres, leave DB variables empty – the app falls back to SQLite at `data/local.db`.
+
 ## Technology Stack
 
 - **Frontend**: Streamlit
